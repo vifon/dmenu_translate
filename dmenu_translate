@@ -16,11 +16,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>. #
 #########################################################################
 
-DMENU_ARGS=${DMENU_ARGS- -f -l 16 -p translate}
 FROM_LANG=en
 TO_LANG=pl
 
-DMENU=${DMENU:-dmenu ${DMENU_ARGS}}
 SHOW_SCRIPT=cat
 
 while getopts "f:t:i:s:gh" ARG; do
@@ -57,13 +55,16 @@ shift $[$OPTIND-1]
 # script interface: ./script <input_lang> <output_lang> <word>
 TRANSLATE_SCRIPT="google-translate $FROM_LANG $TO_LANG"
 
+DMENU_ARGS=${DMENU_ARGS- -f -l 16 -p "\"translate $FROM_LANG:u->$TO_LANG:u\""}
+DMENU=${DMENU:-dmenu ${DMENU_ARGS}}
+
 if [ -z "$INPUT_FILE" ]; then
     aspell -d $FROM_LANG dump master |
       aspell -l $FROM_LANG expand
 else
     < $INPUT_FILE
 fi |
-  ${=DMENU} |
+  eval $DMENU |
   if read; then
     xargs ${=TRANSLATE_SCRIPT} $REPLY | ${=SHOW_SCRIPT}
   fi
