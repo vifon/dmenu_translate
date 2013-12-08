@@ -1,0 +1,69 @@
+#!/bin/zsh
+#########################################################################
+# Copyright (C) 2013  Wojciech Siewierski                               #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program.  If not, see <http://www.gnu.org/licenses/>. #
+#########################################################################
+
+DMENU_ARGS=${DMENU_ARGS- -f -l 16 -p translate}
+FROM_LANG=en
+TO_LANG=pl
+
+DMENU=${DMENU:-dmenu ${DMENU_ARGS}}
+SHOW_SCRIPT=cat
+
+while getopts "f:t:i:s:gh" ARG; do
+    case "$ARG" in
+        f)
+            FROM_LANG=$OPTARG ;;
+        t)
+            TO_LANG=$OPTARG ;;
+        i)
+            INPUT_FILE=$OPTARG ;;
+        s)
+            SHOW_SCRIPT=$OPTARG ;;
+        g)
+            SHOW_SCRIPT='xargs -I"{}" zenity --info --text "{}"' ;;
+        h|?)
+            <<EOF
+
+Usage: dmenu_translate [options]
+
+Options:
+	-f	input language (default: $FROM_LANG)
+	-t	output language (default: $TO_LANG)
+	-s	script into which the output is piped (default: $SHOW_SCRIPT)
+	-g	alias to: -s 'xargs -I"{}" zenity --info --text "{}"'
+	-i	input file to use instead of the aspell dictionary (may be used for caching)
+EOF
+            [ "$ARG" = "h" ]
+            exit $?
+            ;;
+    esac
+done
+shift $[$OPTIND-1]
+
+# script interface: ./script <input_lang> <output_lang> <word>
+TRANSLATE_SCRIPT="google-translate $FROM_LANG $TO_LANG"
+
+if [ -z "$INPUT_FILE" ]; then
+    aspell -d $FROM_LANG dump master |
+      aspell -l $FROM_LANG expand
+else
+    < $INPUT_FILE
+fi |
+  ${=DMENU} |
+  if read; then
+    xargs ${=TRANSLATE_SCRIPT} $REPLY | ${=SHOW_SCRIPT}
+  fi
