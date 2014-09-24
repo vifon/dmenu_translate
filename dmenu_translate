@@ -59,8 +59,7 @@ DMENU_ARGS=${DMENU_ARGS- -f -l 16 -p "\"translate $FROM_LANG:u->$TO_LANG:u\""}
 DMENU=${DMENU:-dmenu ${DMENU_ARGS}}
 
 if [ -z "$INPUT_FILE" ]; then
-    aspell -d $FROM_LANG dump master |
-      aspell -l $FROM_LANG expand
+    aspell -d $FROM_LANG dump master | sed 's/\(.*\)\/.*/\1/'
 else
     < $INPUT_FILE
 fi |
