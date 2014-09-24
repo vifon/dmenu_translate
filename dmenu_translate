@@ -32,7 +32,7 @@ while getopts "f:t:i:s:gh" ARG; do
         s)
             SHOW_SCRIPT=$OPTARG ;;
         g)
-            SHOW_SCRIPT='xargs -I"{}" zenity --info --text "{}"' ;;
+            SHOW_SCRIPT='urxvt -e less -R' ;;
         h|?)
             <<EOF
 
@@ -53,7 +53,7 @@ done
 shift $[$OPTIND-1]
 
 # script interface: ./script <input_lang> <output_lang> <word>
-TRANSLATE_SCRIPT="google-translate $FROM_LANG $TO_LANG"
+TRANSLATE_SCRIPT="trans $FROM_LANG:$TO_LANG"
 
 DMENU_ARGS=${DMENU_ARGS- -f -l 16 -p "\"translate $FROM_LANG:u->$TO_LANG:u\""}
 DMENU=${DMENU:-dmenu ${DMENU_ARGS}}
@@ -65,5 +65,12 @@ else
 fi |
   eval $DMENU |
   if read; then
-    xargs ${=TRANSLATE_SCRIPT} $REPLY | ${=SHOW_SCRIPT}
+    finish() {
+        rm -f "$TMP"
+    }; trap finish EXIT INT TERM
+    TMP=`mktemp -t prefix.XXXXXX --tmpdir=/tmp`
+
+    ${=TRANSLATE_SCRIPT} $REPLY > $TMP
+    ${=SHOW_SCRIPT} $TMP
+    finish
   fi
