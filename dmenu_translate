@@ -42,7 +42,7 @@ Options:
 	-f	input language (default: $FROM_LANG)
 	-t	output language (default: $TO_LANG)
 	-s	script into which the output is piped (default: $SHOW_SCRIPT)
-	-g	alias to: -s 'xargs -I"{}" zenity --info --text "{}"'
+	-g	alias to: -s 'urxvt -e less -R'
 	-i	input file to use instead of the aspell dictionary (may be used for caching)
 EOF
             [ "$ARG" = "h" ]
